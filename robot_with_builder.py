@@ -90,6 +90,9 @@ class RobotBuilder(ABC):
   def build_detection_system(self):
     pass
 
+  def get_product(self):
+    return self.product
+
     
 # Concrete Builder class:  there would be MANY of these
 class AndroidBuilder(RobotBuilder):
@@ -99,11 +102,6 @@ class AndroidBuilder(RobotBuilder):
 
   def reset(self):
     self.product = Robot()
-
-  # All of the concrete builders have this in common
-  # Should it be elevated to the superclass?  
-  def get_product(self):
-    return self.product
 
   def build_traversal(self):
     self.product.traversal.append(BipedalLegs())
@@ -123,9 +121,6 @@ class AutoBuilder(RobotBuilder):
   def reset(self):
     self.product = Robot()
 
-  def get_product(self):
-    return self.product
-
   def build_traversal(self):
     self.product.traversal.append(FourWheels())
   
@@ -140,9 +135,6 @@ class FlyingMonkeyBuilder(RobotBuilder):
 
   def reset(self):
     self.product = Robot()
-
-  def get_product(self):
-    return self.product
 
   def build_traversal(self):
     self.product.traversal.append(Wings())
