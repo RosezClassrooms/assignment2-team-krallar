@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 # In order to only give values for relevant attributes, you must
 #   use some form of keyword argument initialization
 # However, all of the attributes must be given default values
@@ -8,28 +9,14 @@
 # Even if you didn't apply Builder, are there ways to improve this
 #   keyword implementation?
 class Robot:
-  def __init__(self, bipedal = None, quadripedal = None, wheeled = None,
-             flying = None, traversal = [], detection_systems = []):
-    self.bipedal = bipedal
-    self.quadripedal = quadripedal
-    self.wheeled = wheeled
-    self.flying = flying
-    self.traversal = traversal
-    self.detection_systems = detection_systems
+  def __init__(self):
+    self.robot_type = None
+    self.traversal = list()
+    self.detection_systems = list()
 
   # This is still awful!  What should we do about it??
   def __str__(self):
-    string = ""
-    if self.bipedal:
-      string += "BIPEDAL "
-    if self.quadripedal:
-      string += "QUADRIPEDAL "
-    if self.flying:
-      string += "FLYING ROBOT "
-    if self.wheeled:
-      string += "ROBOT ON WHEELS\n"
-    else:
-      string += "ROBOT\n"
+    string = f"{self.robot_type}\n"
 
     if self.traversal:
       string += "Traversal modules installed:\n"
@@ -87,22 +74,98 @@ class InfraredDetectionSystem:
   def __str__(self):
     return "infrared"
 
+ #######################################################
+
+class RobotBuilder(ABC):
+    
+  @abstractmethod
+  def reset(self):
+    pass
+
+  @abstractmethod
+  def build_traversal(self):
+    pass
+
+  @abstractmethod
+  def build_detection_system(self):
+    pass
+
+    
+# Concrete Builder class:  there would be MANY of these
+class AndroidBuilder(RobotBuilder):
+  def __init__(self):
+    self.product = Robot()
+    self.product.robot_type = "ANDROID "
+
+  def reset(self):
+    self.product = Robot()
+
+  # All of the concrete builders have this in common
+  # Should it be elevated to the superclass?  
+  def get_product(self):
+    return self.product
+
+  def build_traversal(self):
+    self.product.traversal.append(BipedalLegs())
+    self.product.traversal.append(Arms())
+
+  def build_detection_system(self):
+    self.product.detection_systems.append(CameraDetectionSystem())
 
 # Constructing robots by providing only relevant attributes
 # Note that when providing attributes via keyword, order doesn't matter!
 # Is there a danger here??
-biped = BipedalLegs()
-android = Robot(detection_systems = [CameraDetectionSystem()],
-                bipedal = biped, traversal = [biped, Arms()] )
-print(android)
+class AutoBuilder(RobotBuilder):
+  def __init__(self):
+    self.product = Robot()
+    self.product.robot_type = "AUTONOMOUS CAR "
 
-wheels = FourWheels()
-auto_auto = Robot(detection_systems = [InfraredDetectionSystem()],
-                  wheeled = wheels, traversal = [wheels])
-print(auto_auto)
+  def reset(self):
+    self.product = Robot()
 
-flyer = Wings()
-flying_monkey_robot = Robot(
-  detection_systems = [CameraDetectionSystem(), InfraredDetectionSystem()],
-  flying = flyer, traversal = [flyer, Arms()])
-print(flying_monkey_robot)
+  def get_product(self):
+    return self.product
+
+  def build_traversal(self):
+    self.product.traversal.append(FourWheels())
+  
+  def build_detection_system(self):
+    self.product.detection_systems.append(InfraredDetectionSystem())
+
+  
+class FlyingMonkeyBuilder(RobotBuilder):
+  def __init__(self):
+    self.product = Robot()
+    self.product.robot_type = "FLYING MONKEY ROBOT "
+
+  def reset(self):
+    self.product = Robot()
+
+  def get_product(self):
+    return self.product
+
+  def build_traversal(self):
+    self.product.traversal.append(Wings())
+    self.product.traversal.append(Arms())
+
+  def build_detection_system(self):
+    self.product.detection_systems.append(InfraredDetectionSystem())
+    self.product.detection_systems.append(CameraDetectionSystem())
+
+
+class Director:
+    def make_robot(self, builder):
+        builder.build_traversal()
+        builder.build_detection_system()
+        return builder.get_product()
+
+director = Director()
+
+builder = AndroidBuilder()
+print(director.make_robot(builder))
+
+builder = AutoBuilder()
+print(director.make_robot(builder))
+
+builder = FlyingMonkeyBuilder()
+print(director.make_robot(builder))

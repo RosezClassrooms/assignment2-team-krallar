@@ -1,1 +1,3 @@
 language = "python3"
+
+run = "python3 robot_with_keywords.py"

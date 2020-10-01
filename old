@@ -1,0 +1,15 @@
+biped = BipedalLegs()
+android = Robot(detection_systems = [CameraDetectionSystem()],
+                bipedal = biped, traversal = [biped, Arms()] )
+print(android)
+
+wheels = FourWheels()
+auto_auto = Robot(detection_systems = [InfraredDetectionSystem()],
+                  wheeled = wheels, traversal = [wheels])
+print(auto_auto)
+
+flyer = Wings()
+flying_monkey_robot = Robot(
+  detection_systems = [CameraDetectionSystem(), InfraredDetectionSystem()],
+  flying = flyer, traversal = [flyer, Arms()])
+print(flying_monkey_robot)
