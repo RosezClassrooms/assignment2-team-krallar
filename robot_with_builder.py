@@ -1,31 +1,22 @@
-from abc import ABC, abstractmethod  # For Builder classes
+from abc import ABC, abstractmethod
+# In order to only give values for relevant attributes, you must
+#   use some form of keyword argument initialization
+# However, all of the attributes must be given default values
+# Keep in mind that in a real application, these would be endless ...
 
-# Doesn't need an endless list of arguments when initialized
+# Is there any danger in having users decide which attributes to specify?
+# What about organization and readability?  Should they all be in one place?
+# Even if you didn't apply Builder, are there ways to improve this
+#   keyword implementation?
 class Robot:
-  # Uses a lot of flag logic here:  Is that necessary?
-  # Does the use of this flag logic create other problems?
   def __init__(self):
-    self.bipedal = False
-    self.quadripedal = False
-    self.wheeled = False
-    self.flying = False
-    self.traversal = []
-    self.detection_systems = []
+    self.robot_type = None
+    self.traversal = list()
+    self.detection_systems = list()
 
-  # Huge decision statement: why is this not good?
-  # Can we improve this?
+  # This is still awful!  What should we do about it??
   def __str__(self):
-    string = ""
-    if self.bipedal:
-      string += "BIPEDAL "
-    if self.quadripedal:
-      string += "QUADRIPEDAL "
-    if self.flying:
-      string += "FLYING ROBOT "
-    if self.wheeled:
-      string += "ROBOT ON WHEELS\n"
-    else:
-      string += "ROBOT\n"
+    string = f"{self.robot_type}\n"
 
     if self.traversal:
       string += "Traversal modules installed:\n"
@@ -43,9 +34,10 @@ class Robot:
 
 #---------------------------------------------------------------------------
 
-# Concrete classes for componenets
-# In a real application, there would be an endless list of these, each one
-#   composing additional subcomponents
+# Concrete component classes
+# If they are defined at this level, they would multiply like rabbits in a
+#   real system, and would have an endless list of subcomponents also
+# Are there better ways to manage all these components?
 class BipedalLegs:
   def __str__(self):
     return "two legs"
@@ -82,12 +74,8 @@ class InfraredDetectionSystem:
   def __str__(self):
     return "infrared"
 
-#----------------------------------------------------------------------------
-# Note that this code was place at the top of this program for visibility
-#from abc import ABC, abstractmethod
+ #######################################################
 
-# The abstract superclass for all the builders
-# We're using inheritence, but it's shallow
 class RobotBuilder(ABC):
     
   @abstractmethod
@@ -107,6 +95,7 @@ class RobotBuilder(ABC):
 class AndroidBuilder(RobotBuilder):
   def __init__(self):
     self.product = Robot()
+    self.product.robot_type = "ANDROID "
 
   def reset(self):
     self.product = Robot()
@@ -117,62 +106,55 @@ class AndroidBuilder(RobotBuilder):
     return self.product
 
   def build_traversal(self):
-    self.product.bipedal = True
     self.product.traversal.append(BipedalLegs())
     self.product.traversal.append(Arms())
 
   def build_detection_system(self):
     self.product.detection_systems.append(CameraDetectionSystem())
 
-# Concrete Builder class:  there would be many of these
-class AutonomousCarBuilder(RobotBuilder):
+# Constructing robots by providing only relevant attributes
+# Note that when providing attributes via keyword, order doesn't matter!
+# Is there a danger here??
+class AutoBuilder(RobotBuilder):
   def __init__(self):
     self.product = Robot()
+    self.product.robot_type = "AUTONOMOUS CAR "
 
   def reset(self):
     self.product = Robot()
 
-  # All of the concrete builders have this in common
-  # Should it be elevated to the superclass?  
   def get_product(self):
     return self.product
 
   def build_traversal(self):
-    self.product.wheeled = True
     self.product.traversal.append(FourWheels())
-
+  
   def build_detection_system(self):
     self.product.detection_systems.append(InfraredDetectionSystem())
 
-#-------------------------------------------------------------------------
-#'''
-# Remove # in line above to comment out this section when using Director
+  
+class FlyingMonkeyBuilder(RobotBuilder):
+  def __init__(self):
+    self.product = Robot()
+    self.product.robot_type = "FLYING MONKEY ROBOT "
 
-# Using the builders to create different robots
-builder = AndroidBuilder()
-builder.build_traversal()
-builder.build_detection_system()
-print(builder.get_product())
+  def reset(self):
+    self.product = Robot()
 
-builder = AutonomousCarBuilder()
-builder.build_traversal()
-builder.build_detection_system()
-print(builder.get_product())
+  def get_product(self):
+    return self.product
 
-#-------------------------------------------------------
-#  Keep line below whether testing builders or director
-'''
-#-------------------------------------------------------
+  def build_traversal(self):
+    self.product.traversal.append(Wings())
+    self.product.traversal.append(Arms())
 
-# Diretor manages all of the Builders
-# Do we need separate make methods?
+  def build_detection_system(self):
+    self.product.detection_systems.append(InfraredDetectionSystem())
+    self.product.detection_systems.append(CameraDetectionSystem())
+
+
 class Director:
-    def make_android(self, builder):
-        builder.build_traversal()
-        builder.build_detection_system()
-        return builder.get_product()
-
-    def make_autonomous_car(self, builder):
+    def make_robot(self, builder):
         builder.build_traversal()
         builder.build_detection_system()
         return builder.get_product()
@@ -180,11 +162,10 @@ class Director:
 director = Director()
 
 builder = AndroidBuilder()
-print(director.make_android(builder))
+print(director.make_robot(builder))
 
-builder = AutonomousCarBuilder()
-print(director.make_autonomous_car(builder))
+builder = AutoBuilder()
+print(director.make_robot(builder))
 
-# comment out line below when testing director
-'''
-
+builder = FlyingMonkeyBuilder()
+print(director.make_robot(builder))
